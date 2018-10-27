@@ -10,4 +10,9 @@ class Order extends Model
     protected $primaryKey = "id";
     protected $fillable = ['name', 'phone', 'page_id'];
     protected $dates = ['created_at', 'updated_at'];
+
+    public function page()
+    {
+        return $this->belongsTo(Page::class);
+    }
 }

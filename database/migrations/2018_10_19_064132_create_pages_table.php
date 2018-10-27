@@ -17,9 +17,9 @@ class CreatePagesTable extends Migration
             $table->engine = 'InnoDB';
             $table->increments('id');
             $table->string('name');
-            $table->float('yesterday_cr', 8, 2);
-            $table->float('today_cr', 8, 2);
-            $table->float('week_cr', 8, 2);
+            $table->float('yesterday_cr', 8, 2)->default(0.00);
+            $table->float('today_cr', 8, 2)->default(0.00);
+            $table->float('week_cr', 8, 2)->default(0.00);
             $table->timestamps();
         });
     }

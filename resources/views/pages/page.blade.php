@@ -27,7 +27,6 @@
             <div class="form-group">
                 <label for="inputPhone">Телефон</label>
                 <input type="text" class="form-control" id="phone" name="phone" placeholder="Ваш номер телефона">
-                <small id="phoneNotification" class="form-text text-muted">We'll never share your phone number with anyone else.</small>
             </div>
             <button type="submit" class="btn btn-primary">Создать заказ</button>
         </form>
