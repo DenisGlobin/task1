@@ -13,5 +13,4 @@
 
 Route::get('/', 'PageController@index');
 Route::get('page/{id}', 'PageController@viewPage')->where(['id' => '[0-9]+']);
-Route::post('/page', 'PageController@addOrder');
-Route::get('/cr', 'ConversionRateController@index');
+Route::post('/', 'PageController@addOrder');

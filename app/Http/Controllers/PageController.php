@@ -2,57 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PageRequest;
+use App\Jobs\SaveUsersInfo;
 use App\Order;
 use App\Page;
-use App\Visitor;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
-    public function index()
-    {
-        $data = [
-            'pages' => Page::get(),
-        ];
-        return view('pages.index', $data);
-    }
+    private $userdata = array();
+    //private $pages;
 
-    public function viewPage($id, Request $request)
-    {
-        $page = Page::findOrFail($id);
-        /*$page = Page::find($id);
-        if($page == null){
-            return view('pages.index', ['pages' => Page::get()]);
-        }*/
-        $data = [
-            'title' => 'Форма для заказа',
-            'name' => $page['name'],
-            'id' => $page['id'],
-        ];
-
-        $userdata = [
-            'user_agent' => $request->header('user-agent'),
-            'ip' => $request->ip(),
-            'referer' => $request->server('HTTP_REFERER'),
-            'page_id' => $id,
-        ];
-        $this->saveVisitor($userdata);
-
-        return view('pages.page', $data);
-    }
-
-    public function addOrder(Request $request)
-    {
-        $order = $this->saveOrder($request->all());
-        if(!($order instanceof Order)){
-            return back()->with('error', "Can't record your order");
-        }
-        $data = [
-            'pages' => Page::get(),
-        ];
-        return view('pages.index', $data)->with('success', "Your order was added");
-    }
-
+    /**
+     * Record order's info in DB, using the Eloquent model
+     *
+     * @param array $data
+     * @return mixed
+     */
     private function saveOrder(array $data)
     {
         return Order::create([
@@ -62,13 +28,72 @@ class PageController extends Controller
         ]);
     }
 
-    private function saveVisitor(array $data)
+    /**
+     * Get all pages
+     *
+     * @return mixed
+     */
+    private function getPages()
     {
-        return Visitor::create([
-            'user_agent' => $data['user_agent'],
-            'ip' => $data['ip'],
-            'http_referer' => $data['referer'],
-            'page_id' => $data['page_id'],
-        ]);
+        return Page::get();
+    }
+
+    public function __construct()
+    {
+       //$this->pages = Page::get();
+    }
+
+    public function index()
+    {
+        $data = [
+            'pages' => $this->getPages(),
+        ];
+        return view('pages.index', $data);
+    }
+
+    /**
+     * Save user's info and show the page
+     * @param $id
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function viewPage($id, Request $request)
+    {
+        $page = Page::findOrFail($id);
+        $data = [
+            'name' => $page['name'],
+            'id' => $page['id'],
+        ];
+        $this->userdata = [
+            'user_agent' => $request->header('user-agent'),
+            'ip' => $request->ip(),
+            'referer' => $request->server('HTTP_REFERER'),
+            'page_id' => $id,
+        ];
+        //save visiting user's info on Queue
+        $this->dispatch(new SaveUsersInfo($this->userdata));
+
+        return view('pages.page', $data);
+    }
+
+    /**
+     * Call the saveOrder method and return to the main page
+     *
+     * @param PageRequest $request
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\View\View
+     */
+    public function addOrder(PageRequest $request)
+    {
+        $order = $this->saveOrder($request->all());
+        if(!($order instanceof Order)) {
+            $request->session()->flash('error', 'Ошибка! Не получилось создать заказ');
+            return back();
+        }
+        $data = [
+            'pages' => $this->getPages(),
+        ];
+        $request->session()->flash('success', 'Ваш заказ сохранён');
+        //return view('pages.index', $data)->with('success', "Ваш заказ сохранён");
+        return view('pages.index', $data);
     }
 }
