@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 class PageController extends Controller
 {
     private $userdata = array();
-    //private $pages;
 
     /**
      * Record order's info in DB, using the Eloquent model
@@ -36,11 +35,6 @@ class PageController extends Controller
     private function getPages()
     {
         return Page::get();
-    }
-
-    public function __construct()
-    {
-       //$this->pages = Page::get();
     }
 
     public function index()
@@ -86,14 +80,13 @@ class PageController extends Controller
     {
         $order = $this->saveOrder($request->all());
         if(!($order instanceof Order)) {
-            $request->session()->flash('error', 'Ошибка! Не получилось создать заказ');
+            $request->session()->flash('error', __('page.error'));
             return back();
         }
         $data = [
             'pages' => $this->getPages(),
         ];
-        $request->session()->flash('success', 'Ваш заказ сохранён');
-        //return view('pages.index', $data)->with('success', "Ваш заказ сохранён");
+        $request->session()->flash('success', __('page.success'));
         return view('pages.index', $data);
     }
 }
